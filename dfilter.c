@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, Regents of the University of California
+ * Copyright (c) 2011-2012, Regents of the University of California
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,100 +27,98 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  *
- * Digital signal processing module
+ * Digital filter module
  *
  * by Stanley S. Baek
  *
  * v.alpha
  *
  * Revisions:
- *  Stanley S. Baek      2011-01-28    Initial release
+ *  Stanley S. Baek             2011-01-28  Initial release
+ *  Fernando L. Garcia Bermudez 2012-04-24  Changed module name to dfilter, to
+ *                                          prevent collisions with Microchip's
+ *                                          dsp module.
+ *  Humphrey Hu                 2012-07-13  Switched to static allocation
  */
 
-#include "dsp.h"
 #include <stdlib.h>
+#include "dfilter.h"
 
+//#define NaN(f) ( ((((char *)&f)[3] & 0x7f) == 0x7f ) && (((char *)&f)[2] & 0x80) )
 
 /*-----------------------------------------------------------------------------
  *          Public functions
 -----------------------------------------------------------------------------*/
-
-float dspApplyFilter(DigitalFilter f, float x) {
-
-    int i;
-    //unsigned char idx = f->index;
-    float y = f->xcoef[0] * x;
-
-    for (i = 1; i <= f->order; ++i) {
-        y += f->xcoef[i]*f->xold[f->index] - f->ycoef[i]*f->yold[f->index];
-        f->index = (f->index == f->order-1)? 0 : f->index + 1;
-    } 
-
-    f->index = (f->index == 0)? f->order - 1 : f->index - 1;
-    f->xold[f->index] = x;
-    f->yold[f->index] = y;
+float dfilterApply(DigitalFilter f, float x)
+{
+    float y;
+    unsigned int i;
+        
+    f->xold[0] = x;
+    f->yold[0] = 0.0;
+    y = 0;
+        
+    for (i = 0; i <= f->order; i++) {
+        y += f->xcoef[i]*f->xold[i] + f->ycoef[i]*f->yold[i];
+    }
+    
+    memmove(&f->xold[1], &f->xold[0], sizeof(float)*(f->order));
+    memmove(&f->yold[1], &f->yold[0], sizeof(float)*(f->order));
+    
+    f->yold[1] = y;
 
     return y;
-
 }
 
 
-DigitalFilter dspCreateFilter(unsigned char order, FilterType type, 
-                float* xcoeffs, float* ycoeffs) {
+DigitalFilter dfilterCreate(unsigned char order, FilterType type,
+                float* xcoeffs, float* ycoeffs)
+{
+    return NULL;
+}
 
-    int i;
+void dfilterInit(DigitalFilter f, unsigned char order, FilterType type,
+                    float* xcoeffs, float* ycoeffs) {
 
-    if (order == 0) return NULL;
-   
-    DigitalFilter f = (DigitalFilter)malloc(sizeof(DigitalFilterStruct));
+    memset(f, 0x00, sizeof(DigitalFilterStruct));
+    
+    if(order > MAX_FILTER_ORDER) { return; }
     f->order = order;
     f->type = type;
-    f->xcoef = (float*)malloc((order+1)*sizeof(float));
-    f->ycoef = (float*)malloc((order+1)*sizeof(float));
-    f->xold = (float*)malloc(order*sizeof(float));
-    f->yold = (float*)malloc(order*sizeof(float));
-    f->index = 0;
-
-    for(i = 0; i < order; ++i) {
-        f->xold[i] = 0;
-        f->yold[i] = 0;
-        f->xcoef[i] = xcoeffs[i];
-        f->ycoef[i] = ycoeffs[i];
-    }
-
-    f->xcoef[order] = xcoeffs[order];
-    f->ycoef[order] = ycoeffs[order];
+    memcpy(&f->xcoef, xcoeffs, sizeof(float)*(order + 1));
+    memcpy(&f->ycoef, ycoeffs, sizeof(float)*(order + 1));
     
-    return f;
 }
 
 
-float* dspGetOutputValues(DigitalFilter f) {
+float* dfilterGetOutputValues(DigitalFilter f)
+{
     return f->yold;
 }
 
-float* dspGetInputValues(DigitalFilter f) {
+float* dfilterGetInputValues(DigitalFilter f)
+{
     return f->xold;
 }
 
-float dspGetLatestOutputValue(DigitalFilter f) {
-    return (f == NULL)? 0.0 : f->yold[f->index];
+float dfilterGetLatestOutputValue(DigitalFilter f)
+{
+    return (f == NULL) ? 0.0 : f->yold[1];
 }
 
-float dspGetLatestInputValue(DigitalFilter f) {
-    return (f == NULL)? 0.0 : f->xold[f->index];
+float dfilterGetLatestInputValue(DigitalFilter f)
+{
+    return (f == NULL) ? 0.0 : f->xold[1];
 }
 
-unsigned char dspGetIndex(DigitalFilter f) {
-    return f->index;
+// TODO: Deprecate
+unsigned char dfilterGetIndex(DigitalFilter f)
+{
+    //return f->index;
+    return 0;
 }
 
-void dspDeleteFilter(DigitalFilter f) {
-
-    free(f->xcoef);
-    free(f->ycoef);
-    free(f->xold);
-    free(f->yold);
-    free(f);
-
+void dfilterDelete(DigitalFilter f)
+{
+    return;
 }
