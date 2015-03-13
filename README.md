@@ -9,6 +9,9 @@ Description
 A set of common modules developed for the ImageProc family of boards,
 which use Microchip's dsPIC architecture.
 
+These modules work with ImageProc 2.5 boards. Support for older boards up to
+version 2.4 can be found in the [ip24-maint](../../tree/ip24-maint) branch.
+
 Download code
 -------------
 https://github.com/biomimetics/imageproc-lib
@@ -36,7 +39,7 @@ these conference papers:
   In IROS 2011. San Francisco, CA, USA.
 
 This material is based upon work supported by the National Science
-Foundation under Grant No. IIS-0705429 and IIS-0931463. Any opinions, 
+Foundation under Grant No. IIS-0705429 and IIS-0931463. Any opinions,
 findings, and conclusions or recommendations expressed in this material
 are those of the author(s) and do not necessarily reflect the views of
 the National Science Foundation.

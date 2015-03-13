@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Regents of the University of California
+ * Copyright (c) 2012-2013, Regents of the University of California
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,35 +27,47 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  *
- * Averaging filter using a circular buffer
+ * ams PID Module
  *
- * by Andrew Pullin
+ * by Duncan Haldane
  *
- * v.0.1
+ * v.0.2
  */
 
-#ifndef __DFILTER_AVG_H
-#define __DFILTER_AVG_H
+#ifndef __AMS_CTRL_H
+#define __AMS_CTRL_H
 
 
-typedef struct {
-    unsigned int windowLen;
-    unsigned int index;
-    int* data;
-    long accum;
-} dfilterAvgInt_t;
+#ifdef PID_SOFTWARE
 
-// Creates a filter and returns a point.
-// Caller should check for NULL returns.
-void dfilterAvgCreate(dfilterAvgInt_t*, unsigned int);
+    #define AMS_DEFAULT_KP  200
+    #define AMS_DEFAULT_KI  5
+    #define AMS_DEFAULT_KD  0
+    #define AMS_DEFAULT_KAW 5
+    #define AMS_DEFAULT_KFF  0
+    #define SOFT_GAIN_SCALER 512
 
-// Add a value to the circular buffer, incrementing index
-void dfilterAvgUpdate(dfilterAvgInt_t*, int);
+#elif defined PID_HARDWARE
 
-// Calculate and return average value;
-int dfilterAvgCalc(dfilterAvgInt_t*);
+    #define AMS_DEFAULT_KP  3000
+    #define AMS_DEFAULT_KI  10
+    #define AMS_DEFAULT_KD  0
+    #define AMS_DEFAULT_KAW 0
+    #define AMS_DEFAULT_KFF  0
+    #define AMS_GAIN_SCALE  8
 
-//Zero all values in the filter
-void dfilterZero(dfilterAvgInt_t* filt);
+#endif
 
-#endif // __DFILTER_AVG_H
+#define nPIDS  2
+
+//Setup PID for ams encoders
+void amsPIDSetup(void);
+
+void amsCtrlSetInput(unsigned char num, int state);
+
+void amsCtrlPIDUpdate(unsigned char num, int state);
+
+void amsCtrlSetGains(unsigned char num, int Kp, int Ki, int Kd, int Kaw, int ff);
+
+
+#endif // __AMS_CTRL_H
